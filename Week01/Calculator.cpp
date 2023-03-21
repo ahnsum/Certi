@@ -1,14 +1,11 @@
 
-//#define _CRT_SECURE_NO_WARNINGS
 
-//#include <stdio.h>
 #include <iostream>
 #include <stdlib.h>
-//#include <stack>
 
 using namespace std;
 
-enum symbol {
+enum symbol { 
 	LEFT_PAREN = '(',
 	RIGHT_PAREN = ')',
 	PLUS = '+',
@@ -17,101 +14,68 @@ enum symbol {
 	DIVIDE = '/'
 };
 
-class Stack { // 스택 구현 클래스
+
+template <typename T> class Stack { // 스택 구현 클래스
 private:
-	int top = -1;
-	char* ch;
+	int top;
+	T* ch;
 public:
 	Stack();
-	char peek(); // top 값 출력
-	void push(char c); // item 삽입
-	char pop(); // item 반환 후 삭제
+	T peek(); // top 값 출력
+	void push(T); // item 삽입
+	T pop(); // item 반환 후 삭제
 	int size() { return top + 1; }
 	bool isEmpty() { return (top == -1); }
-	void resize(int i);
 };
 
-Stack::Stack() {
+template <typename T>
+Stack<T>::Stack() {
 	top = -1;
-	ch = new char[1];
+	ch = new T[10];
 }
 
-char Stack::peek() {
+template <typename T>
+T Stack<T>::peek() {
 	if (isEmpty()) {
-		return;
+		return NULL;
 	}
 
 	return ch[top];
 }
 
-void Stack::push(char newItem) {
-	/*if (size() == sizeof(ch)) {
-		resize(2 * sizeof(ch));
-		cout << "배열 사이즈 : " << 2 * sizeof(ch) << endl;
-	}*/
-
+template <typename T>
+void Stack<T>::push(T newItem) {
+	
 	ch[++top] = newItem;
 }
 
-char Stack::pop() {
+template <typename T>
+T Stack<T>::pop() {
 	if (isEmpty()) {
-		return;
+		return NULL;
 	}
-
-	char item = ch[top];
-	ch[top--] = '\0';
-
-	/*if (size() > 0 && size() == sizeof(ch) / 4) {
-		resize(int(sizeof(ch) / 2));
-		cout << "배열 사이즈 : " << int(sizeof(ch) / 2) << endl;
-	}*/
+	
+	T item = ch[top];
+	ch[top--] = NULL;
 
 	return item;
 }
-
-/*void Stack::resize(int newSize) {
-	char* temp;
-	temp = new char[newSize];
-
-	for (int i = 0; i < sizeof(ch); i++) {
-		temp[i] = ch[i];
-	}
-
-	ch = temp;
-}*/
 
 
 
 class Calculator { // 계산기 클래스
 
 private:
-	Stack stack;
+	Stack<char> stack;
 	char* str;
 public:
-	Calculator() { str = new char[50]; };
-	void input(); // 입력
-	int priority(char ch); // 우선순위
-	void postfix(char* ch); // 후위표기법
-	//void run(); // 계산
+	Calculator() { str = NULL; };
+	int priority(char); // 우선순위
+	void postfix(char*); // 후위표기법
+	void run(); // 계산
 	~Calculator() {}
 };
-/*
-void Calculator::input() {
-	char ch;
-	int i = 0;
 
-	while ((ch = getchar()) != EOF)
-	{
-		str[i] = getchar();
-
-		if (str[i++] == '\n') {
-			str[i - 1] = '\n';
-			break;
-		}
-	}
-
-	printf("ch : %s\n", str);
-}*/
 
 int Calculator::priority(char ch) { // 우선순위
 	if (ch == LEFT_PAREN) {
@@ -129,11 +93,10 @@ int Calculator::priority(char ch) { // 우선순위
 
 void Calculator::postfix(char* ch) { // 후위표기법 변환 ★★★
 	
-	Stack st;
-	int len = sizeof(ch);
+	int len = strlen(ch);
 	int index = 0;
-	char* pos = new char[len];
-
+	char* pos = new char[len+1]; // '\0'가 입력될 여유 공간
+	
 	for (int i = 0; i < len; i++) 
 	{
 		if (ch[i] >= '0' && ch[i] <= '9') { // 피연산자 출력
@@ -142,58 +105,97 @@ void Calculator::postfix(char* ch) { // 후위표기법 변환 ★★★
 		}
 		else if (ch[i] == RIGHT_PAREN) { // ')'가 나오면 '('가 나올 때까지 출력
 			
-			while (st.peek() != LEFT_PAREN)
+			while (stack.peek() != LEFT_PAREN)
 			{
-				pos[index++] = st.peek();
-				st.pop();
+				pos[index++] = stack.peek();
+				stack.pop();
 			}
-			st.pop(); // '(' 버리기
+			stack.pop(); // '(' 버리기
 		}
 		else { // 연산자
 
-			while (!st.isEmpty() && ch[i] != LEFT_PAREN && (priority(ch[i]) <= priority(st.peek())) )
-			{ // !st.isEmpty() : 가장 처음의 연산자는 바로 push && (+,-) < (*,/)
-				pos[index++] = st.peek();
-				st.pop();
+			while (!stack.isEmpty() && ch[i] != LEFT_PAREN && (priority(ch[i]) <= priority(stack.peek())) )
+			{ // !st.isEmpty() : 가장 처음의 연산자는 바로 push && (+,-) < (*,/) && <= : / 와 * 는 우선순위가 동일
+				pos[index++] = stack.peek();
+				stack.pop();
 			}
-			st.push(ch[i]);
+			stack.push(ch[i]);
 		}
 	}
 
-	while (!st.isEmpty()) { // stack에 push한 item 전부 출력
-		pos[index++] = st.peek();
-		st.pop();
+	while (!stack.isEmpty()) { // stack에 push한 item 전부 출력
+		pos[index++] = stack.peek();
+		stack.pop();
+		//pos[index++] = stack.pop();
 	}
+
+	pos[index] = '\0'; // 배열 입력 종료 ★★★
 	
-	printf("%s\n", pos);
+	str = pos;
+
+	cout << "Postfix ::: " << str << endl;
 }
-/*
+
+
 void Calculator::run() {
-	// atoi() 함수
+	
+	Stack<int> stk;
 	int size = strlen(str);
+	int value, num1, num2;
+	char ch;
 
 	for (int i = 0; i < size; i++)
 	{
-		if (str[i] >= '0' && str[i] <= '9') {
-			s=st
+		ch = str[i];
+
+		if (ch >= '0' && ch <= '9') {
+			value = ch - '0';
+			stk.push(value);
 		}
+		else {
+			num2 = stk.pop();
+			num1 = stk.pop();
+
+			switch (ch) {
+			case PLUS: stk.push(num1 + num2); break;
+			case MINUS: stk.push(num1 - num2); break;
+			case MULTIPLY: stk.push(num1 * num2); break;
+			case DIVIDE: stk.push(num1 / num2); break;
+			}
+		}
+		
 	}
-}*/
+	cout << "Result :::: " << stk.pop() << endl;
+}
 
 
 
 int main()
 {
 	Calculator calc;
-	char expression[50];
+	char expression[50]; // 한 자릿수만 입력 가능
+	char exit;
 
+	cout << "================================================" << endl;
 	cout << "================== Calculator ==================" << endl;
 	cout << "================================================" << endl;
-	cout << "Enter the expression >> ";
-	cin >> expression;
 	
-	calc.postfix(expression);
+	while (1) {
 
+		cout << "Enter the expression >> ";
+		cin >> expression;
+
+		calc.postfix(expression);
+		calc.run();
+
+		cout << "종료하려면 q를 누르세요 => ";
+		
+		cin >> exit;
+		if (exit == 'q') {
+			break;
+		}
+		cout << "================================================" << endl;
+	}
 
 	return 0;
 }
