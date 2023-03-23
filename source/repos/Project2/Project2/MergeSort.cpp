@@ -13,14 +13,14 @@ public:
 };
 
 void MergeSort::merge(int* arr, int left, int middle, int right) {
-	
+
 	int i, j, k;
 
 	i = left;
 	j = middle + 1;
 	k = left; // 임시 배열 인덱스 값
 
-	while ( i <= middle && j <= right ) {
+	while (i <= middle && j <= right) {
 
 		if (arr[i] <= arr[j]) {
 			temp[k] = arr[i++];
@@ -57,7 +57,7 @@ void MergeSort::merge_sort(int* arr, int left, int right) {
 		mid = (left + right) / 2;
 
 		merge_sort(arr, left, mid);
-		merge_sort(arr, mid+1, right);
+		merge_sort(arr, mid + 1, right);
 		merge(arr, left, mid, right);
 	}
 
@@ -70,7 +70,7 @@ int main() {
 	MergeSort ms;
 
 	int arr[] = { 10, 4, 2, 7, 9, 3, 5, 1, 8, 6 };
-	
+
 	cout << "============================================" << endl;
 
 	for (int i = 0; i < 10; i++) {
